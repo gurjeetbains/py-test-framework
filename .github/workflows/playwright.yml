@@ -6,6 +6,8 @@ jobs:
   test:
     timeout-minutes: 10
     runs-on: ubuntu-latest
+    env:
+      WEB_URL: "https://qa-practice.netlify.app/bugs-form"
     steps:
       - uses: actions/checkout@v6
 
