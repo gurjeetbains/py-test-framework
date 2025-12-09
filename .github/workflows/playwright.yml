@@ -1,0 +1,37 @@
+name: Playwright Tests
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: "pyproject.toml" # Reads version from your config
+
+      - name: Install dependencies
+        run: uv sync --all-extras --dev
+
+      - name: Install Playwright browsers
+        run: uv run playwright install --with-deps
+
+      - name: Run Playwright tests
+        run: uv run pytest
+    
+      - name: Upload Playwright traces
+        uses: actions/upload-artifact@v5
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-traces
+          path: test-results/

@@ -231,22 +231,42 @@ Reports include:
 
 ### GitHub Actions Example
 
-```yaml
+```yml
 name: Playwright Tests
-on: [push, pull_request]
+on:
+  workflow_dispatch:
+
 jobs:
   test:
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: astral-sh/setup-uv@v1
-      - run: uv sync
-      - run: uv run playwright install --with-deps
-      - run: uv run test
-      - uses: actions/upload-artifact@v3
-        if: always()
+      - uses: actions/checkout@v6
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
         with:
-          name: test-results
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: "pyproject.toml" # Reads version from your config
+
+      - name: Install dependencies
+        run: uv sync --all-extras --dev
+
+      - name: Install Playwright browsers
+        run: uv run playwright install --with-deps
+
+      - name: Run Playwright tests
+        run: uv run pytest
+    
+      - uses: actions/upload-artifact@v5
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-traces
           path: test-results/
 ```
 
